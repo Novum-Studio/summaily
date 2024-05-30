@@ -2,6 +2,10 @@ from abc import ABC, abstractmethod
 
 # Abstract Base Class for all email providers.
 class EmailProvider(ABC):
+    # FIXME: storing email address as default attribute but gmail OAuth would have empty username and pwd.
+    def __init__(self):
+        self.imap = None
+
     @abstractmethod
     def connect(self):
         """
@@ -21,6 +25,5 @@ class EmailProvider(ABC):
             list: A list of dictionaries containing email fields (subject, from, to, date, body)
         """
         pass
-
 
 
