@@ -5,6 +5,7 @@ class User:
     def __init__(self, email_provider : EmailProvider, user_id : str):
         self.email_provider = email_provider
         self.user_id = user_id
+        self.categories = ["Others"]    # Email categories after summarization (User Preferences)
     
     def fetch_emails(self, num_emails = -1) -> list:
         self.email_provider.connect()
