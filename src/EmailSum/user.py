@@ -9,7 +9,7 @@ class User:
     
     def fetch_emails(self, num_emails = -1) -> list:
         self.email_provider.connect()
-        result = self.email_provider.fetch_emails(num_emails=-1)
+        result = self.email_provider.fetch_emails(num_emails)
         return result
 
     def summarize_emails(self, num_emails = -1):
