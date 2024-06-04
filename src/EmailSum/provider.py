@@ -59,7 +59,7 @@ class IMAPProvider(EmailProvider):
             
             # Access email fields
             subject, encoding = decode_header(email_message['Subject'])[0]
-            if isinstance(subject, bytes): subject = subject.decode(encoding)
+            if isinstance(subject, bytes) and encoding: subject = subject.decode(encoding)
 
             from_address = email_message['From']
             to_address = email_message['To']
