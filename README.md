@@ -1,1 +1,1 @@
-# EmailSum
+# SumMaily
