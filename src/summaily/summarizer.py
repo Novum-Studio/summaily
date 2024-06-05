@@ -9,12 +9,12 @@ from mistral_common.protocol.instruct.request import ChatCompletionRequest
 
 
 class Summarizer:
-    def __init__(self, model_path):
+    def __init__(self, model_path : str):
         self.model_path = model_path
         self.tokenizer = MistralTokenizer.from_file(f"{self.model_path}/tokenizer.model.v3")
         self.model = Transformer.from_folder(self.model_path)
     
-    def summarize(self, email_body, category) -> str:
+    def summarize(self, email_body : str, category : list) -> str:
         category_str = ', '.join(category[:-1])
         category_str += f", or {category[-1]}"
         prompt = (
