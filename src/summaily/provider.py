@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
-from dotenv import load_dotenv
-import imaplib, email, os
+import imaplib, email
 from email.header import decode_header
-
-GMAIL_SERVER = "imap.gmail.com"
 
 # Abstract Base Class for all email providers.
 class EmailProvider(ABC):
@@ -59,6 +56,7 @@ class IMAPProvider(EmailProvider):
             
             # Access email fields
             subject, encoding = decode_header(email_message['Subject'])[0]
+            # FIXME: Default set to UTF-8 decoding
             if isinstance(subject, bytes) and encoding: subject = subject.decode(encoding)
 
             from_address = email_message['From']
@@ -71,26 +69,18 @@ class IMAPProvider(EmailProvider):
             body = ''
             for part in email_message.walk():
                 body_part = part.get_payload(decode=True)
-                # FIXME: need support for scraping text/html
+                # FIXME: need support for scraping all type of MIME text
                 if part.get_content_type() == 'text/plain':
                     body_part = body_part.decode()
                     body += body_part
 
-
+            
             current_email['Subject'] = subject
             current_email['From'] = from_address
             current_email['To'] = to_address
             current_email['Date'] = date
             current_email['Body'] = body
 
-            result.append(current_email)  
+            result.append(current_email) 
 
         return result
-
-
-if __name__ == "__main__":
-    load_dotenv()
-    gmail = IMAPProvider(GMAIL_SERVER, os.getenv('EMAIL'), os.getenv('PASSWORD'))
-    gmail.connect()
-
-    print(gmail.fetch_emails(1))
