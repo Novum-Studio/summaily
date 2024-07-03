@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import imaplib, email
 from email.header import decode_header
+import requests
+import base64
 
 # Abstract Base Class for all email providers.
 class EmailProvider(ABC):
@@ -84,3 +86,68 @@ class IMAPProvider(EmailProvider):
             result.append(current_email) 
 
         return result
+
+class GoogleProvider(EmailProvider):
+    def __init__(self, token: str):
+        self.token = token
+        self.session = None
+
+    def connect(self):
+        self.session = requests.Session()
+        self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+
+    def fetch_emails(self, num_emails=-1) -> list:
+        result = list()
+        if not self.session:
+            raise Exception("Not connected to the Google API.")
+
+        # Fetch emails from Gmail API
+        response = self.session.get(
+            "https://www.googleapis.com/gmail/v1/users/me/messages",
+            params={"maxResults": num_emails} if num_emails > 0 else {}
+        )
+
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch emails: {response.status_code}")
+
+        messages = response.json().get("messages", [])
+        for msg in messages:
+            email_data = self.get_email(msg["id"])
+            result.append(email_data)
+
+        return result
+
+    def get_email(self, msg_id):
+        # Fetch a single email by ID
+        response = self.session.get(
+            f"https://www.googleapis.com/gmail/v1/users/me/messages/{msg_id}"
+        )
+
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch email: {response.status_code}")
+
+        msg = response.json()
+        email_data = {
+            "Subject": self.get_header(msg, "Subject"),
+            "From": self.get_header(msg, "From"),
+            "To": self.get_header(msg, "To"),
+            "Date": self.get_header(msg, "Date"),
+            "Body": self.get_body(msg)
+        }
+        return email_data
+
+    def get_header(self, msg, header_name):
+        headers = msg["payload"]["headers"]
+        for header in headers:
+            if header["name"] == header_name:
+                return header["value"]
+        return None
+
+    def get_body(self, msg):
+        parts = msg["payload"].get("parts", [])
+        body = ""
+        for part in parts:
+            if part["mimeType"] == "text/plain":
+                data = part["body"]["data"]
+                body += base64.urlsafe_b64decode(data).decode()
+        return body
