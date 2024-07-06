@@ -1,0 +1,4 @@
+imaplib
+email
+mistral_common
+mistral_inference
