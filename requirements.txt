@@ -1,4 +1,4 @@
-imaplib
-email
 mistral_common
 mistral_inference
+python-dotenv
+gitpython
