@@ -5,16 +5,36 @@ from mistral_inference.generate import generate
 from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
 from mistral_common.protocol.instruct.messages import UserMessage
 from mistral_common.protocol.instruct.request import ChatCompletionRequest
+from typing import Tuple, Optional
+import time
+from .constants import LAZY_LOAD
 
+def load_model(model_path : str) -> Tuple[MistralTokenizer, Transformer]:
+    start = time.time()
+    print("Loading tokenizer...")
+    tokenizer = MistralTokenizer.from_file(f"{model_path}/tokenizer.model.v3")
+    print(f"Tokenizer loaded in {time.time() - start:.2f} seconds")
+
+    start = time.time()
+    print("Loading model...")
+    model = Transformer.from_folder(model_path)
+    print(f"Model loaded in {time.time() - start:.2f} seconds")
+    
+    return tokenizer, model
 
 
 class Summarizer:
     def __init__(self, model_path : str):
         self.model_path = model_path
-        self.tokenizer = MistralTokenizer.from_file(f"{self.model_path}/tokenizer.model.v3")
-        self.model = Transformer.from_folder(self.model_path)
+        self.tokenizer: Optional[MistralTokenizer] = None
+        self.model: Optional[Transformer] = None
+        if not LAZY_LOAD:
+            self.tokenizer, self.model = load_model(self.model_path)
+        
     
     def summarize(self, email_body : str, category : list) -> str:
+        if not self.tokenizer or not self.model:
+            self.tokenizer, self.model = load_model(self.model_path)
         category_str = ', '.join(category[:-1])
         category_str += f", or {category[-1]}"
         prompt = (
