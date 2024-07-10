@@ -1,9 +1,9 @@
-from .provider import EmailProvider
+from .provider import EmailProviderInterface
 from .summarizer import Summarizer
 from .constants import MISTRAL7B_MODEL_PATH
 
 class User:
-    def __init__(self, email_provider : EmailProvider, user_id : str):
+    def __init__(self, email_provider : EmailProviderInterface, user_id : str):
         self.email_provider = email_provider
         self.user_id = user_id
         self.categories = ["Others", "Job-related"]    # Email categories after summarization (User Preferences)
@@ -22,7 +22,8 @@ class User:
             summary = self.summarizer.summarize(mail['Body'], self.categories)
             print(summary)
 
-
+    def _add_new_category(self, new_category):
+        return 
 
         
 
