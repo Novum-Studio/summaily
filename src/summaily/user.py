@@ -1,6 +1,7 @@
 from .provider import EmailProviderInterface
 from .summarizer import Summarizer
 from .constants import MISTRAL7B_MODEL_PATH
+import json
 
 class User:
     def __init__(self, email_provider : EmailProviderInterface, user_id : str):
@@ -20,9 +21,11 @@ class User:
         # TODO: store emails ids for easy access of the emails? 
         #       for example, user should be able to see full emails when they choose to see the emails in one 
         #       of the report categories.
-        for mail in self.fetch_emails(num_emails):
-            if not mail["Body"]: continue
-            summary = self.summarizer.summarize(' '.join(mail['Body']['extracted_text']), self.categories)
+        for id, mail in self.fetch_emails(num_emails).items():
+            if not mail.body: continue
+            summary = self.summarizer.summarize(' '.join(mail.body.extracted_text), self.categories)
+            summary = json.loads(summary)
+            summary['id'] = id
             print(summary)
 
     def _add_new_category(self, new_category):
