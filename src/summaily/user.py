@@ -10,16 +10,19 @@ class User:
         self.summarizer = Summarizer(MISTRAL7B_MODEL_PATH)
 
 
-    def fetch_emails(self, num_emails = -1) -> list:
+    def fetch_emails(self, num_emails: int = -1) -> list:
         self.email_provider.connect()
         result = self.email_provider.fetch_emails(num_emails)
         return result
 
-    def summarize_emails(self, num_emails):
+    def summarize_emails(self, num_emails: int):
         # TODO: return dictionary in which keys are different categories.
+        # TODO: store emails ids for easy access of the emails? 
+        #       for example, user should be able to see full emails when they choose to see the emails in one 
+        #       of the report categories.
         for mail in self.fetch_emails(num_emails):
             if not mail["Body"]: continue
-            summary = self.summarizer.summarize(mail['Body'], self.categories)
+            summary = self.summarizer.summarize(' '.join(mail['Body']['extracted_text']), self.categories)
             print(summary)
 
     def _add_new_category(self, new_category):
