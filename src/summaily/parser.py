@@ -5,7 +5,7 @@ from email.message import EmailMessage, Message
 from typing import List, Dict, Any, Optional, Callable
 from bs4 import BeautifulSoup
 from datetime import datetime
-import pytz
+import pytz, re
 
 
 class EmailParser: 
@@ -76,7 +76,6 @@ class EmailParser:
     @staticmethod
     def _parse_body(email_message: Message) -> Dict[str, str]:
         body = {
-            "ordered_parts": [],
             "plain": [],
             "html": [],
             "extracted_text": []
@@ -87,20 +86,12 @@ class EmailParser:
         else:
             EmailParser._process_part(email_message, body)
 
-        # Extrace text from HTML parts
-        for part_type, content in body['ordered_parts']:
-            if part_type == "html":
-                soup = BeautifulSoup(content, 'html.parser')
-                body['extracted_text'].append(soup.get_text(separator=' ', strip=True))
-            elif part_type == "plain":
-                body['extracted_text'].append(content)
         return body
         
     @staticmethod
     def _process_multipart(email_message: Message, body: Dict[str, Any]):
         for part in email_message.walk():
-            if part.is_multipart():
-                continue
+            if part.is_multipart(): continue
 
             EmailParser._process_part(part, body)
 
@@ -109,23 +100,27 @@ class EmailParser:
     def _process_part(part: Message, body: Dict[str, Any]):
         content_type = part.get_content_type()
         content = EmailParser._get_decoded_payload(part)
+        # TODO: store image reference for future use.
+        content = re.sub(r'\[image:.*?\]', '', content)
+        content = content.replace('\r\n', '\n')
+        content = '\n'.join(line.strip() for line in content.splitlines() if line.strip())
         if content:
             if content_type == "text/plain":
                 body["plain"].append(content)
-                body["ordered_parts"].append(("plain", content))
+                body['extracted_text'].append(content)
             elif content_type == "text/html":
                 body["html"].append(content)
-                body["ordered_parts"].append(("html", content))
+                soup = BeautifulSoup(content, 'html.parser')
+                body['extracted_text'].append(soup.get_text(separator=' ', strip=True))
 
 
     @staticmethod
     def _parse_attachments(email_message: Message) -> List[Dict[str, Any]]:
         attachments = []
         for part in email_message.walk():
-            if part.get_content_maintype() == 'multipart':
+            if part.get_content_maintype() == 'multipart' or not part.get('Content-Disposition'):
                 continue
-            if part.get('Content-Disposition') is None:
-                continue
+            
             filename = part.get_filename()
             if filename:
                 attachments.append({
@@ -138,4 +133,3 @@ class EmailParser:
     PARSING_STRATEGIES: Dict[str, Callable] = {
         'imap' : _parse_imap_email
     }
-

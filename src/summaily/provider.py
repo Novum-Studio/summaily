@@ -55,8 +55,6 @@ class IMAPProvider(EmailProviderInterface):
         for id in recent_n_mails:
             _, data2 = self.imap.fetch(id, '(RFC822)')
             raw_email = data2[0][1]
-            cur = EmailParser.parse_email(raw_email, self.PROVIDER_TYPE)
-            print(cur['Body'])
             result.append(EmailParser.parse_email(raw_email, self.PROVIDER_TYPE)) 
 
         return result
