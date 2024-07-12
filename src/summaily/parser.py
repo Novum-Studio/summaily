@@ -1,33 +1,72 @@
-import email.utils
 import email
+import email.utils
 from email.header import decode_header
-from email.message import EmailMessage, Message
+from email.message import Message
 from typing import List, Dict, Any, Optional, Callable
 from bs4 import BeautifulSoup
 from datetime import datetime
+from dataclasses import dataclass, field, asdict
 import pytz, re
 
+@dataclass
+class Attachment:
+    filename: str
+    content_type: str
+    size: int
+
+@dataclass
+class EmailBody:
+    plain: List[str]
+    html: List[str]
+    extracted_text: List[str]
+
+@dataclass
+class Email:
+    id: str
+    subject: str
+    from_address: str
+    to_address: str
+    date: datetime
+    body: EmailBody
+    attachments: List[Attachment] = field(default_factory=list)
+
+    # TODO: implement these functions for easy translation.
+    def to_dict(self):
+        pass
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        pass
 
 class EmailParser: 
     @staticmethod
-    def parse_email(raw_email: Any, provider_type: str) -> Dict[str, Any]:
+    def parse_email(email_id: str, raw_email: Any, provider_type: str) -> Dict[str, Any]:
         parsing_strategy = EmailParser.PARSING_STRATEGIES.get(provider_type)
         if parsing_strategy:
-            return parsing_strategy(raw_email)
+            return parsing_strategy(email_id, raw_email)
         else:
             return ValueError(f"Unsupported email provider type: {provider_type}")
     
     @staticmethod
-    def _parse_imap_email(raw_email: Any) -> Dict[str, Any]:
+    def _parse_imap_email(email_id: str, raw_email: Any) -> Email:
         email_message = email.message_from_bytes(raw_email)
-        return {
-            "Subject": EmailParser._decode_header_value(email_message["Subject"]),
-            "From": EmailParser._decode_header_value(email_message["From"]),
-            "To": EmailParser._decode_header_value(email_message["To"]),
-            "Date": EmailParser._parse_date(email_message["Date"]),
-            "Body": EmailParser._parse_body(email_message),
-            "Attachments": EmailParser._parse_attachments(email_message)
-        }
+        subject = EmailParser._decode_header_value(email_message["Subject"])
+        from_address = EmailParser._decode_header_value(email_message["From"])
+        to_address = EmailParser._decode_header_value(email_message["To"])
+        date = EmailParser._parse_date(email_message["Date"])
+        body = EmailParser._parse_body(email_message)
+        attachments = EmailParser._parse_attachments(email_message)
+
+
+        return Email(
+            id=email_id,
+            subject=subject,
+            from_address=from_address,
+            to_address=to_address,
+            date=date,
+            body=EmailBody(**body),
+            attachments=[Attachment(**att) for att in attachments]
+        )
 
     @staticmethod
     def _decode_header_value(value: Optional[str]) -> Optional[str]:

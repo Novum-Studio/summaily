@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import imaplib
 from typing import List, Dict, Any
-from .parser import EmailParser
+from .parser import EmailParser, Email
 
 # Abstract Base Class for all email providers.
 class EmailProviderInterface(ABC):
@@ -44,8 +44,8 @@ class IMAPProvider(EmailProviderInterface):
         self.imap = imaplib.IMAP4_SSL(self.server)
         self.imap.login(self.username, self.password)
     
-    def fetch_emails(self, num_emails: int =-1) -> List[Dict[str, Any]]:
-        result = list()
+    def fetch_emails(self, num_emails: int =-1) -> Dict[str, Email]:
+        result = dict()
         self.imap.select('INBOX', readonly=True)
         print("Fetching Emails...")
 
@@ -55,25 +55,6 @@ class IMAPProvider(EmailProviderInterface):
         for id in recent_n_mails:
             _, data2 = self.imap.fetch(id, '(RFC822)')
             raw_email = data2[0][1]
-            result.append(EmailParser.parse_email(raw_email, self.PROVIDER_TYPE)) 
-
+            result[id] = EmailParser.parse_email(id, raw_email, self.PROVIDER_TYPE)
         return result
     
-
-    
-
-if __name__ == "__main__":
-    # This is just a demonstration. In reality, you'd use this with IMAPProvider
-    sample_email = b"""From: "Sender Name" <sender@example.com>
-To: "Recipient Name" <recipient@example.com>
-Subject: Test Email
-Date: Tue, 15 Aug 2023 14:30:00 +0000
-
-This is a test email body."""
-
-    parsed_email = EmailParser.parse_email(sample_email, 'imap')
-    print(f"Subject: {parsed_email['Subject']}")
-    print(f"From: {parsed_email['From']}")
-    print(f"To: {parsed_email['To']}")
-    print(f"Date: {parsed_email['Date']}")
-    print(f"Body: {parsed_email['Body']['plain'][0] if parsed_email['Body']['plain'] else 'No plain text body'}")
