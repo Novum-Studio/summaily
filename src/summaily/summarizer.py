@@ -10,6 +10,11 @@ import time
 from .constants import LAZY_LOAD
 
 def load_model(model_path : str) -> Tuple[MistralTokenizer, Transformer]:
+    """ Load Mistral tokenizer and model from model path.
+
+    Args:
+        model_path (str): path that stores tokenizers and model.
+    """
     start = time.time()
     print("Loading tokenizer...")
     tokenizer = MistralTokenizer.from_file(f"{model_path}/tokenizer.model.v3")

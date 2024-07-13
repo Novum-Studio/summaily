@@ -44,8 +44,8 @@ class IMAPProvider(EmailProviderInterface):
         self.imap = imaplib.IMAP4_SSL(self.server)
         self.imap.login(self.username, self.password)
     
-    def fetch_emails(self, num_emails: int =-1) -> Dict[str, Email]:
-        result = dict()
+    def fetch_emails(self, num_emails: int =-1) -> List[Email]:
+        result = list()
         self.imap.select('INBOX', readonly=True)
         print("Fetching Emails...")
 
@@ -55,6 +55,6 @@ class IMAPProvider(EmailProviderInterface):
         for id in recent_n_mails:
             _, data2 = self.imap.fetch(id, '(RFC822)')
             raw_email = data2[0][1]
-            result[id] = EmailParser.parse_email(id, raw_email, self.PROVIDER_TYPE)
+            result.append(EmailParser.parse_email(id, raw_email, self.PROVIDER_TYPE))
         return result
     

@@ -29,6 +29,8 @@ class Email:
     date: datetime
     body: EmailBody
     attachments: List[Attachment] = field(default_factory=list)
+    category: Optional[str] = None
+    summary: Optional[str] = None
 
     # TODO: implement these functions for easy translation.
     def to_dict(self):

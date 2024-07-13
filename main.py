@@ -7,6 +7,8 @@ import os
 
 if __name__ == "__main__":   
     load_dotenv()
+    print("Logging in...")
     gmail = IMAPProvider(GMAIL_SERVER, os.getenv('EMAIL'), os.getenv('PASSWORD'))
     user = User(gmail, "0")
-    user.summarize_emails(5)
+    print("Summarizing...")
+    print(user.summarize_emails(5))
