@@ -32,13 +32,18 @@ class Email:
     category: Optional[str] = None
     summary: Optional[str] = None
 
-    # TODO: implement these functions for easy translation.
-    def to_dict(self):
-        pass
+    def to_dict(self) -> Dict[str, Any]:
+        email_dict = asdict(self)
+        email_dict['date'] = self.date.isoformat()
+        return email_dict
 
     @classmethod
     def from_dict(cls, data: dict):
-        pass
+        data['date'] = datetime.fromisoformat(data['date'])
+        data['body'] = EmailBody(**data['body'])
+        data['attachement'] = [Attachment(**att) for att in data['attachement']]
+        return cls(**data)
+    
 
 class EmailParser: 
     @staticmethod

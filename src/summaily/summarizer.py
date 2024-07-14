@@ -6,8 +6,9 @@ from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
 from mistral_common.protocol.instruct.messages import UserMessage
 from mistral_common.protocol.instruct.request import ChatCompletionRequest
 from typing import Tuple, Optional
-import time
 from .constants import LAZY_LOAD
+import time
+
 
 def load_model(model_path : str) -> Tuple[MistralTokenizer, Transformer]:
     """ Load Mistral tokenizer and model from model path.
@@ -40,11 +41,10 @@ class Summarizer:
     def summarize(self, email_body : str, category : list) -> str:
         if not self.tokenizer or not self.model:
             self.tokenizer, self.model = load_model(self.model_path)
-        category_str = ', '.join(category[:-1])
-        category_str += f", or {category[-1]}"
+
         prompt = (
             "Please summarize the following email content. "
-            f"After providing the summary, categorize the email into one of the following categories: {category_str}. "
+            f"After providing the summary, categorize the email into one of the following categories: {category}. "
             "The JSON format should look like this:\n"
             '{"summary": "<summary of the email>", "category": "<category>"}\n\n'
             "Here is the email content:\n\n"
@@ -52,7 +52,7 @@ class Summarizer:
             "Return only the JSON format."
         )
 
-
+        # TODO: need description for default category so it is more robust
         completion_request = ChatCompletionRequest(
         tools=[
             Tool(
